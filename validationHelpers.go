@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"unicode/utf8"
 
 	"github.com/skodnik/go-contenttype/contenttype"
@@ -33,4 +34,12 @@ func (v *ValidationRes) checkChirpLength() {
 }
 
 func (v *ValidationRes) cleanBody() {
+	if v.Valid {
+		body := v.Body
+		for _, werd := range sanitationWords {
+			re := regexp.MustCompile(`(?i)` + werd)
+			body = re.ReplaceAllString(body, "****")
+		}
+		v.ClanedBody = body
+	}
 }

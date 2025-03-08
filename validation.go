@@ -24,6 +24,12 @@ const (
 	unexpected string = "Something went wrong"
 )
 
+var (
+	sanitationWords = []string{
+		"kerfuffle", "sharbert", "fornax",
+	}
+)
+
 func handleChirpValidation(w http.ResponseWriter, r *http.Request) {
 	// decode req body
 	decoder := json.NewDecoder(r.Body)
@@ -39,6 +45,7 @@ func handleChirpValidation(w http.ResponseWriter, r *http.Request) {
 	res := new(ValidationRes)
 	res.Body = chirp.Body
 	res.checkChirpLength()
+	res.cleanBody()
 
 	data, err := json.Marshal(res)
 	if err != nil {
