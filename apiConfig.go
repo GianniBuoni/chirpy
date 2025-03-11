@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	"github.com/GianniBuoni/chirpy/internal/database"
 	"github.com/skodnik/go-contenttype/contenttype"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	queries        *database.Queries
 }
 
 // getters

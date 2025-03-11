@@ -1,9 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/GianniBuoni/chirpy/internal/database"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"github.com/skodnik/go-contenttype/contenttype"
 )
 
@@ -12,8 +17,22 @@ func main() {
 		port         string = "8080"
 		filePathRoot string = "."
 	)
+
+	// load env
+	godotenv.Load()
+	dbURL := os.Getenv("DB_URL")
+
+	// psql connection
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Print(err)
+		os.Exit(1)
+	}
+	queries := database.New(conn)
+
 	// api config
 	api := new(apiConfig)
+	api.queries = queries
 
 	// handlers
 	mux := http.NewServeMux()
@@ -24,6 +43,7 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", api.handleReset)
 	mux.HandleFunc("GET /api/healthz", healthCheck)
 	mux.HandleFunc("POST /api/validate_chirp", handleChirpValidation)
+	mux.HandleFunc("POST /api/users", handeUsers)
 
 	// init server
 	server := new(http.Server)
