@@ -21,6 +21,7 @@ func main() {
 	// load env
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
+	platform := os.Getenv("PLATFORM")
 
 	// psql connection
 	conn, err := sql.Open("postgres", dbURL)
@@ -33,6 +34,7 @@ func main() {
 	// api config
 	api := new(apiConfig)
 	api.queries = queries
+	api.platform = platform
 
 	// handlers
 	mux := http.NewServeMux()

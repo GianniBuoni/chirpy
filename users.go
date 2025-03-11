@@ -19,6 +19,7 @@ func (a *apiConfig) handeUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("ERROR: could not unmarshal reqest, %s\n", err.Error())
 		respondWithError(w, http.StatusInternalServerError, unexpected)
+		return
 	}
 
 	// int response
@@ -29,12 +30,14 @@ func (a *apiConfig) handeUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("ERROR: could not create user\n")
 		respondWithError(w, http.StatusInternalServerError, unexpected)
+		return
 	}
 
 	data, err := json.Marshal(newUser)
 	if err != nil {
 		log.Printf("ERROR: could not marshal new user\n")
 		respondWithError(w, http.StatusInternalServerError, unexpected)
+		return
 	}
 	respondWithJSON(w, http.StatusCreated, data)
 }
