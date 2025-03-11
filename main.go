@@ -43,7 +43,7 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", api.handleReset)
 	mux.HandleFunc("GET /api/healthz", healthCheck)
 	mux.HandleFunc("POST /api/validate_chirp", handleChirpValidation)
-	mux.HandleFunc("POST /api/users", handeUsers)
+	mux.HandleFunc("POST /api/users", api.handeUsers)
 
 	// init server
 	server := new(http.Server)
