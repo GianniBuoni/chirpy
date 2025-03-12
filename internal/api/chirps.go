@@ -83,8 +83,7 @@ func (cfg *ApiConfig) HandleChirp(w http.ResponseWriter, r *http.Request) {
 
 	// response
 	chipParams.ID = uuid.New()
-	chipParams.UserID.UUID = id
-	chipParams.UserID.Valid = true
+	chipParams.UserID = id
 	chipParams.CreatedAt = time.Now()
 	chipParams.UpdatedAt = time.Now()
 	data, err := cfg.Queries.CreateChirp(r.Context(), chipParams)
