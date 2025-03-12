@@ -27,6 +27,28 @@ func (cfg *ApiConfig) GETchirps(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, res)
 }
 
+func (cfg *ApiConfig) GETchirp(w http.ResponseWriter, r *http.Request) {
+	// parse db query
+	id, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		log.Printf("Could not parse UUID: %s\n", r.PathValue("chirpID"))
+	}
+	data, err := cfg.Queries.GetChirp(r.Context(), id)
+	if err != nil {
+		log.Printf("ERROR: could not make db query, %s\n", err)
+		respondWithError(w, http.StatusNotFound, "Chirp not found")
+		return
+	}
+	// parses response
+	res, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("ERROR: could not marshal chirp data, %s\n", err)
+		respondWithError(w, http.StatusInternalServerError, unexpected)
+		return
+	}
+	respondWithJSON(w, http.StatusOK, res)
+}
+
 func (cfg *ApiConfig) HandleChirp(w http.ResponseWriter, r *http.Request) {
 	// chirp
 	decoder := json.NewDecoder(r.Body)

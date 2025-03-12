@@ -46,6 +46,7 @@ func main() {
 	mux.HandleFunc("POST /api/users", api.HandeUsers)
 	mux.HandleFunc("POST /api/chirps", api.HandleChirp)
 	mux.HandleFunc("GET /api/chirps", api.GETchirps)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", api.GETchirp)
 
 	// init server
 	server := new(http.Server)
