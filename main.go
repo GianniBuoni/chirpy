@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/GianniBuoni/chirpy/internal/api"
 	"github.com/GianniBuoni/chirpy/internal/database"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -32,20 +33,17 @@ func main() {
 	queries := database.New(conn)
 
 	// api config
-	api := new(apiConfig)
-	api.queries = queries
-	api.platform = platform
+	api := api.NewAPI(platform, queries)
 
 	// handlers
 	mux := http.NewServeMux()
-	mux.Handle("/app/", api.middlewareMetricsInc(
+	mux.Handle("/app/", api.MiddlewareMetricsInc(
 		http.StripPrefix("/app", http.FileServer(http.Dir(filePathRoot))),
 	))
-	mux.HandleFunc("GET /admin/metrics", api.handleMetrics)
-	mux.HandleFunc("POST /admin/reset", api.handleReset)
+	mux.HandleFunc("GET /admin/metrics", api.HandleMetrics)
+	mux.HandleFunc("POST /admin/reset", api.HandleReset)
 	mux.HandleFunc("GET /api/healthz", healthCheck)
-	mux.HandleFunc("POST /api/validate_chirp", handleChirpValidation)
-	mux.HandleFunc("POST /api/users", api.handeUsers)
+	mux.HandleFunc("POST /api/users", api.HandeUsers)
 
 	// init server
 	server := new(http.Server)

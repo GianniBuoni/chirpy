@@ -1,9 +1,11 @@
-package main
+package api
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"regexp"
+	"unicode/utf8"
 )
 
 type ChirpParams struct {
@@ -17,18 +19,6 @@ type ValidationRes struct {
 	Status     int    `json:"-"`
 	Valid      bool   `json:"valid"`
 }
-
-const (
-	charLimit  int    = 140
-	tooLong    string = "Chirp is too long"
-	unexpected string = "Something went wrong"
-)
-
-var (
-	sanitationWords = []string{
-		"kerfuffle", "sharbert", "fornax",
-	}
-)
 
 func handleChirpValidation(w http.ResponseWriter, r *http.Request) {
 	// decode req body
@@ -54,4 +44,26 @@ func handleChirpValidation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJSON(w, res.Status, data)
+}
+
+func (v *ValidationRes) checkChirpLength() {
+	if utf8.RuneCountInString(v.Body) > charLimit {
+		v.Error = tooLong
+		v.Status = http.StatusBadRequest
+		return
+	}
+	v.Valid = true
+	v.Error = ""
+	v.Status = http.StatusOK
+}
+
+func (v *ValidationRes) cleanBody() {
+	if v.Valid {
+		body := v.Body
+		for _, werd := range sanitationWords {
+			re := regexp.MustCompile(`(?i)` + werd)
+			body = re.ReplaceAllString(body, "****")
+		}
+		v.ClanedBody = body
+	}
 }

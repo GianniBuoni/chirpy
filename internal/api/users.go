@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a *apiConfig) handeUsers(w http.ResponseWriter, r *http.Request) {
+func (a *ApiConfig) HandeUsers(w http.ResponseWriter, r *http.Request) {
 	// decode req
 	decoder := json.NewDecoder(r.Body)
 	user := database.CreateUserParams{}
@@ -26,7 +26,7 @@ func (a *apiConfig) handeUsers(w http.ResponseWriter, r *http.Request) {
 	user.ID = uuid.New()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
-	newUser, err := a.queries.CreateUser(context.Background(), user)
+	newUser, err := a.Queries.CreateUser(context.Background(), user)
 	if err != nil {
 		log.Printf("ERROR: could not create user\n")
 		respondWithError(w, http.StatusInternalServerError, unexpected)
