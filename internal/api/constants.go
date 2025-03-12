@@ -10,7 +10,8 @@ const (
 	charLimit int    = 140
 
 	// token settings
-	tokenDuration time.Duration = 1 * time.Hour
+	JWTDuration     time.Duration = 1 * time.Hour
+	RefreshDuration time.Duration = 1440 * time.Hour
 )
 
 var (

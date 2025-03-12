@@ -8,21 +8,22 @@ import (
 	"time"
 
 	"github.com/GianniBuoni/chirpy/internal/auth"
+	"github.com/GianniBuoni/chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
 type loginRequest struct {
-	Password         string `json:"password"`
-	Email            string `json:"email"`
-	ExpiresInSeconds int    `json:"expires_in_seconds"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
 type loginResponse struct {
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Id        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	Token     string    `json:"token"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Id           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	Token        string    `json:"token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
 func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -61,15 +62,30 @@ func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Id:        user.ID,
 		Email:     user.Email,
 	}
-	expiry := tokenDuration
-	if params.ExpiresInSeconds > 0 {
-		dur := time.Duration(params.ExpiresInSeconds) * time.Second
-		expiry = min(tokenDuration, dur)
-	}
-	data.Token, err = auth.MakeJWT(user.ID, cfg.SignSecret, expiry)
+	data.Token, err = auth.MakeJWT(user.ID, cfg.SignSecret, JWTDuration)
 	if err != nil {
+		log.Printf("ERROR: could not make JWT, %s\n", err.Error())
+		respondWithError(w, http.StatusInternalServerError, unexpected)
 		return
 	}
+	data.RefreshToken, err = auth.MakeRefreshToken()
+	if err != nil {
+		log.Printf("ERROR: could not make RefreshToken, %s\n", err.Error())
+		respondWithError(w, http.StatusInternalServerError, unexpected)
+		return
+	}
+	// store RefreshToken in database
+	_, err = cfg.Queries.CreateRefreshToken(
+		r.Context(),
+		database.CreateRefreshTokenParams{
+			Token:     data.RefreshToken,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			UserID:    user.ID,
+			ExpiresAt: time.Now().Add(RefreshDuration),
+		},
+	)
+
 	res, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("ERROR: could not unmarshal request, %s\n", err.Error())
