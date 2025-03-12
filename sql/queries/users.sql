@@ -1,13 +1,19 @@
 -- name: CreateUser :one
-INSERT INTO users (id, created_at, updated_at, email)
-VALUES (
-  $1, $2, $3, $4
+INSERT INTO users (
+  id, created_at, updated_at, email, hashed_password
 )
-RETURNING *;
+VALUES (
+  $1, $2, $3, $4, $5
+)
+RETURNING id, created_at, updated_at, email;
 
--- name: GetUsers :many
+-- name: GetUser :one
 SELECT * FROM users
-ORDER BY created_at;
+WHERE email = $1;
+
+-- name: GetUserResponse :one
+SELECT id, created_at, updated_at, email FROM users
+WHERE id = $1;
 
 -- name: DeleteUsers :exec
 DELETE FROM users;

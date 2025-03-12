@@ -8,3 +8,5 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/skodnik/go-contenttype v1.0.1
 )
+
+require golang.org/x/crypto v0.36.0
