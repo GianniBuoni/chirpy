@@ -5,14 +5,29 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/GianniBuoni/chirpy/internal/auth"
-	"github.com/GianniBuoni/chirpy/internal/database"
+	"github.com/google/uuid"
 )
+
+type loginRequest struct {
+	Password         string `json:"password"`
+	Email            string `json:"email"`
+	ExpiresInSeconds int    `json:"expires_in_seconds"`
+}
+
+type loginResponse struct {
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Id        uuid.UUID `json:"id"`
+	Email     string    `json:"email"`
+	Token     string    `json:"token"`
+}
 
 func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	params := database.User{}
+	params := loginRequest{}
 	err := decoder.Decode(&params)
 	if err != nil {
 		log.Printf("ERROR: could not unmarshal request, %s\n", err.Error())
@@ -24,7 +39,7 @@ func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Bad request: experting email\n")
 		return
 	}
-	if params.HashedPassword == "" {
+	if params.Password == "" {
 		respondWithError(w, http.StatusBadRequest, "Bad request: no password set\n")
 		return
 	}
@@ -34,21 +49,30 @@ func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusNotFound, msg)
 		return
 	}
-	err = auth.CheckPasswordHash(user.HashedPassword, params.HashedPassword)
+	err = auth.CheckPasswordHash(user.HashedPassword, params.Password)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password")
 		return
 	}
 	// init response
-	data, err := cfg.Queries.GetUserResponse(r.Context(), user.ID)
+	data := loginResponse{
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Id:        user.ID,
+		Email:     user.Email,
+	}
+	expiry := tokenDuration
+	if params.ExpiresInSeconds > 0 {
+		dur := time.Duration(params.ExpiresInSeconds) * time.Second
+		expiry = min(tokenDuration, dur)
+	}
+	data.Token, err = auth.MakeJWT(user.ID, cfg.SignSecret, expiry)
 	if err != nil {
-		log.Printf("ERROR: could not get user login response, %s\n", err.Error())
-		respondWithError(w, http.StatusInternalServerError, unexpected)
 		return
 	}
 	res, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("ERROR: could not get user login response, %s\n", err.Error())
+		log.Printf("ERROR: could not unmarshal request, %s\n", err.Error())
 		respondWithError(w, http.StatusInternalServerError, unexpected)
 		return
 	}

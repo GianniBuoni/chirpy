@@ -9,6 +9,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/GianniBuoni/chirpy/internal/auth"
 	"github.com/GianniBuoni/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -39,7 +40,7 @@ func (cfg *ApiConfig) GETchirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusNotFound, "Chirp not found")
 		return
 	}
-	// parses response
+	// parse response
 	res, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("ERROR: could not marshal chirp data, %s\n", err)
@@ -50,10 +51,21 @@ func (cfg *ApiConfig) GETchirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) HandleChirp(w http.ResponseWriter, r *http.Request) {
+	// parses logged in
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Not logged in")
+		return
+	}
+	id, err := auth.ValidateJWT(token, cfg.SignSecret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Invalid credentils")
+		return
+	}
 	// chirp
 	decoder := json.NewDecoder(r.Body)
 	chipParams := database.CreateChirpParams{}
-	err := decoder.Decode(&chipParams)
+	err = decoder.Decode(&chipParams)
 	if err != nil {
 		log.Printf("ERROR: could unmarshal chirp request, %s\n", err.Error())
 		respondWithError(w, http.StatusInternalServerError, unexpected)
@@ -71,6 +83,8 @@ func (cfg *ApiConfig) HandleChirp(w http.ResponseWriter, r *http.Request) {
 
 	// response
 	chipParams.ID = uuid.New()
+	chipParams.UserID.UUID = id
+	chipParams.UserID.Valid = true
 	chipParams.CreatedAt = time.Now()
 	chipParams.UpdatedAt = time.Now()
 	data, err := cfg.Queries.CreateChirp(r.Context(), chipParams)

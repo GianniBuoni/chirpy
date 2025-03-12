@@ -11,15 +11,9 @@ import (
 
 type ApiConfig struct {
 	Platform       string
+	SignSecret     string
 	Queries        *database.Queries
 	FileserverHits atomic.Int32
-}
-
-func NewAPI(p string, q *database.Queries) *ApiConfig {
-	api := new(ApiConfig)
-	api.Platform = p
-	api.Queries = q
-	return api
 }
 
 // getters

@@ -1,6 +1,12 @@
 package auth
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"errors"
+	"net/http"
+	"strings"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 func HashPassword(password string) (string, error) {
 	b, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -17,4 +23,14 @@ func CheckPasswordHash(hash, password string) error {
 		return err
 	}
 	return nil
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	header := headers.Get("Authorization")
+	if header == "" {
+		return "", errors.New("No Authorization header set")
+	}
+	bearer := strings.Replace(header, "Bearer", "", 1)
+	bearer = strings.Trim(bearer, " ")
+	return bearer, nil
 }

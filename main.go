@@ -18,11 +18,12 @@ func main() {
 		port         string = "8080"
 		filePathRoot string = "."
 	)
+	// init api
+	api := new(api.ApiConfig)
 
 	// load env
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
-	platform := os.Getenv("PLATFORM")
 
 	// psql connection
 	conn, err := sql.Open("postgres", dbURL)
@@ -30,10 +31,11 @@ func main() {
 		log.Print(err)
 		os.Exit(1)
 	}
-	queries := database.New(conn)
 
-	// api config
-	api := api.NewAPI(platform, queries)
+	// config api
+	api.Platform = os.Getenv("PLATFORM")
+	api.SignSecret = os.Getenv("SIGN_SECRET")
+	api.Queries = database.New(conn)
 
 	// handlers
 	mux := http.NewServeMux()
