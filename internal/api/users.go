@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -26,7 +25,7 @@ func (a *ApiConfig) HandeUsers(w http.ResponseWriter, r *http.Request) {
 	user.ID = uuid.New()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
-	newUser, err := a.Queries.CreateUser(context.Background(), user)
+	newUser, err := a.Queries.CreateUser(r.Context(), user)
 	if err != nil {
 		log.Printf("ERROR: could not create user\n")
 		respondWithError(w, http.StatusInternalServerError, unexpected)
