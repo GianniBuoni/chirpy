@@ -3,12 +3,9 @@
   packages = with pkgs; [
     git
 
-    # language support/tools
-    gopls
+    # project tools
     goose
     sqlc
-
-    # extras
     jq
   ];
 
