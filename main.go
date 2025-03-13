@@ -49,9 +49,9 @@ func main() {
 	mux.HandleFunc("POST /api/login", api.HandleLogin)
 	mux.HandleFunc("POST /api/refresh", api.HandleRefresh)
 	mux.HandleFunc("POST /api/revoke", api.HandleRevoke)
-	mux.HandleFunc("POST /api/chirps", api.HandleChirp)
-	mux.HandleFunc("GET /api/chirps", api.GETchirps)
-	mux.HandleFunc("GET /api/chirps/{chirpID}", api.GETchirp)
+	mux.HandleFunc("POST /api/chirps", api.HandlePOSTChirp)
+	mux.HandleFunc("GET /api/chirps", api.HandleGETChirps)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", api.HandleGETChirpsWithID)
 
 	// init server
 	server := new(http.Server)

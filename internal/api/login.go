@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -31,17 +30,16 @@ func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	params := loginRequest{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		log.Printf("ERROR: could not unmarshal request, %s\n", err.Error())
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "decoder.Decode", err)
 		return
 	}
 	// handle empty fields
 	if params.Email == "" {
-		respondWithError(w, http.StatusBadRequest, "Bad request: experting email\n")
+		respondWithInfoError(w, r.Pattern, http.StatusBadRequest, "expecting email")
 		return
 	}
 	if params.Password == "" {
-		respondWithError(w, http.StatusBadRequest, "Bad request: no password set\n")
+		respondWithInfoError(w, r.Pattern, http.StatusBadRequest, "no password set")
 		return
 	}
 	user, err := cfg.Queries.GetUser(r.Context(), params.Email)
@@ -52,9 +50,10 @@ func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	err = auth.CheckPasswordHash(user.HashedPassword, params.Password)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password")
+		respondWithInfoError(w, r.Pattern, http.StatusUnauthorized)
 		return
 	}
+
 	// init response
 	data := loginResponse{
 		CreatedAt: user.CreatedAt,
@@ -64,14 +63,12 @@ func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	data.Token, err = auth.MakeJWT(user.ID, cfg.SignSecret, JWTDuration)
 	if err != nil {
-		log.Printf("ERROR: could not make JWT, %s\n", err.Error())
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "MakeJWT", err)
 		return
 	}
 	data.RefreshToken, err = auth.MakeRefreshToken()
 	if err != nil {
-		log.Printf("ERROR: could not make RefreshToken, %s\n", err.Error())
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "MakeRefreshToken", err)
 		return
 	}
 	// store RefreshToken in database
@@ -88,8 +85,7 @@ func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	res, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("ERROR: could not unmarshal request, %s\n", err.Error())
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "json.Marshal", err)
 		return
 	}
 	respondWithJSON(w, http.StatusOK, res)

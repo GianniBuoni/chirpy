@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -17,17 +16,16 @@ func (a *ApiConfig) HandeUsers(w http.ResponseWriter, r *http.Request) {
 	user := database.CreateUserParams{}
 	err := decoder.Decode(&user)
 	if err != nil {
-		log.Printf("ERROR: could not unmarshal request, %s\n", err.Error())
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "decoder.Decode", err)
 		return
 	}
 	// handle empty fields
 	if user.Email == "" {
-		respondWithError(w, http.StatusBadRequest, "Bad request: experting email\n")
+		respondWithInfoError(w, r.Pattern, http.StatusBadRequest, "expecting email")
 		return
 	}
 	if user.HashedPassword == "" {
-		respondWithError(w, http.StatusBadRequest, "Bad request: no password set\n")
+		respondWithInfoError(w, r.Pattern, http.StatusBadRequest, "no password set")
 		return
 	}
 	// init response
@@ -36,22 +34,17 @@ func (a *ApiConfig) HandeUsers(w http.ResponseWriter, r *http.Request) {
 	user.UpdatedAt = time.Now()
 	user.HashedPassword, err = auth.HashPassword(user.HashedPassword)
 	if err != nil {
-		log.Printf(
-			"ERROR: could not create new user with password. Check auth.\n",
-		)
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "HashPassword", err)
 		return
 	}
 	newUser, err := a.Queries.CreateUser(r.Context(), user)
 	if err != nil {
-		log.Printf("ERROR: could not create user\n")
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "db.CreateUser", err)
 		return
 	}
 	data, err := json.Marshal(newUser)
 	if err != nil {
-		log.Printf("ERROR: could not marshal new user\n")
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "json.Marshal", err)
 		return
 	}
 	respondWithJSON(w, http.StatusCreated, data)

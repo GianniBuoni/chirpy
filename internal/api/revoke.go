@@ -2,7 +2,6 @@ package api
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 	"time"
 
@@ -13,8 +12,7 @@ import (
 func (cfg *ApiConfig) HandleRevoke(w http.ResponseWriter, r *http.Request) {
 	rToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		log.Printf("%s, %s\n", r.URL, err)
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "GetBearerToken", err)
 		return
 	}
 	params := database.RevokeTokenParams{

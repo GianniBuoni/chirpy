@@ -2,8 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
 	"regexp"
 	"time"
@@ -14,52 +12,29 @@ import (
 	"github.com/google/uuid"
 )
 
-func (cfg *ApiConfig) GETchirps(w http.ResponseWriter, r *http.Request) {
+func (cfg *ApiConfig) HandleGETChirps(w http.ResponseWriter, r *http.Request) {
 	data, err := cfg.Queries.GetChirps(r.Context())
 	if err != nil {
-		log.Printf("ERROR: issue getting chirps, %s\n", err)
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "GetChirps", err)
 		return
 	}
 	res, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("ERROR: issue marshaling chirps, %s\n", err)
+		respondWithUnexpeted(w, r.Pattern, "json.Marshal", err)
 	}
 	respondWithJSON(w, http.StatusOK, res)
 }
 
-func (cfg *ApiConfig) GETchirp(w http.ResponseWriter, r *http.Request) {
-	// parse db query
-	id, err := uuid.Parse(r.PathValue("chirpID"))
-	if err != nil {
-		log.Printf("Could not parse UUID: %s\n", r.PathValue("chirpID"))
-	}
-	data, err := cfg.Queries.GetChirp(r.Context(), id)
-	if err != nil {
-		log.Printf("ERROR: could not make db query, %s\n", err)
-		respondWithError(w, http.StatusNotFound, "Chirp not found")
-		return
-	}
-	// parse response
-	res, err := json.Marshal(data)
-	if err != nil {
-		log.Printf("ERROR: could not marshal chirp data, %s\n", err)
-		respondWithError(w, http.StatusInternalServerError, unexpected)
-		return
-	}
-	respondWithJSON(w, http.StatusOK, res)
-}
-
-func (cfg *ApiConfig) HandleChirp(w http.ResponseWriter, r *http.Request) {
+func (cfg *ApiConfig) HandlePOSTChirp(w http.ResponseWriter, r *http.Request) {
 	// parses logged in
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Not logged in")
+		respondWithInfoError(w, r.Pattern, http.StatusUnauthorized, "not logged in")
 		return
 	}
 	id, err := auth.ValidateJWT(token, cfg.SignSecret)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Invalid credentils")
+		respondWithInfoError(w, r.Pattern, http.StatusUnauthorized)
 		return
 	}
 	// chirp
@@ -67,16 +42,14 @@ func (cfg *ApiConfig) HandleChirp(w http.ResponseWriter, r *http.Request) {
 	chipParams := database.CreateChirpParams{}
 	err = decoder.Decode(&chipParams)
 	if err != nil {
-		log.Printf("ERROR: could unmarshal chirp request, %s\n", err.Error())
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "decoder.Decode", err)
 		return
 	}
 
 	// validation
-	err = checkChirpLength(chipParams.Body)
-	if err != nil {
-		log.Print(err)
-		respondWithError(w, http.StatusBadRequest, err.Error())
+	ok := checkChirpLength(chipParams.Body)
+	if !ok {
+		respondWithInfoError(w, r.Pattern, http.StatusBadRequest, tooLong)
 		return
 	}
 	chipParams.Body = cleanBody(chipParams.Body)
@@ -88,25 +61,23 @@ func (cfg *ApiConfig) HandleChirp(w http.ResponseWriter, r *http.Request) {
 	chipParams.UpdatedAt = time.Now()
 	data, err := cfg.Queries.CreateChirp(r.Context(), chipParams)
 	if err != nil {
-		log.Printf("ERROR: could not create new chirp, %s.\n", err)
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "db.CreateChirp", err)
 		return
 	}
 	res, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("ERROR: could not marshal new chirp, %s.\n", err)
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "json.Marshal", err)
 		return
 	}
 	respondWithJSON(w, http.StatusCreated, res)
 }
 
 // helpers
-func checkChirpLength(s string) error {
+func checkChirpLength(s string) bool {
 	if utf8.RuneCountInString(s) > charLimit {
-		return errors.New(tooLong)
+		return false
 	}
-	return nil
+	return true
 }
 
 func cleanBody(s string) string {

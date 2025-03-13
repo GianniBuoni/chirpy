@@ -1,12 +1,13 @@
 package api
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
 
 const (
-	unexpected string = "Something went wrong"
-
 	// chrip settings
-	tooLong   string = "Chirp is too long"
+	tooLong   string = "chirp too long"
 	charLimit int    = 140
 
 	// token settings
@@ -16,4 +17,13 @@ const (
 
 var (
 	sanitationWords = []string{"kerfuffle", "sharbert", "fornax"}
+
+	// error messages
+	errorMesages = map[int]string{
+		http.StatusInternalServerError: "Something went wrong",
+		http.StatusUnauthorized:        "Invalid credentials",
+		http.StatusNotFound:            "Not Found",
+		http.StatusBadRequest:          "Bad request",
+		http.StatusForbidden:           "Endpoint forbidden",
+	}
 )

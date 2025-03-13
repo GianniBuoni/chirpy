@@ -9,7 +9,7 @@ import (
 
 func (cfg *ApiConfig) HandleReset(w http.ResponseWriter, r *http.Request) {
 	if cfg.Platform != "dev" {
-		respondWithError(w, http.StatusForbidden, "Endpoint forbidden")
+		respondWithInfoError(w, r.Pattern, http.StatusForbidden)
 		return
 	}
 	// reset hits
@@ -19,11 +19,9 @@ func (cfg *ApiConfig) HandleReset(w http.ResponseWriter, r *http.Request) {
 	// reset users
 	err := cfg.Queries.DeleteUsers(r.Context())
 	if err != nil {
-		log.Printf("ERROR: could not reset users, %s", err.Error())
-		respondWithError(w, http.StatusInternalServerError, unexpected)
+		respondWithUnexpeted(w, r.Pattern, "db.DeleteUsers", err)
 		return
 	}
-
 	// form res
 	w.Header().Add("Content-Type", contenttype.TextPlain)
 	w.WriteHeader(http.StatusOK)
