@@ -15,14 +15,26 @@
   # languages
   languages.go.enable = true;
 
+  # env
+  dotenv.enable = true;
+
   # services
-  # services.postgres.enable = true;
+  services.postgres = {
+    enable = true;
+    listen_addresses = "127.0.0.1";
+    initialDatabases = [
+      {
+        name = "chirpy";
+        user = "postgres";
+        pass = "$PG_PASS";
+      }
+    ];
+  };
 
   # https://devenv.sh/scripts/
   enterShell = ''
     git --version
     export PATH="$HOME/go/bin:$PATH"
-    tmux
   '';
 
   # https://devenv.sh/tests/
