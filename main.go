@@ -53,6 +53,10 @@ func main() {
 	mux.HandleFunc("POST /api/chirps", api.AuthMiddleware(api.HandlePOSTChirp))
 	mux.HandleFunc("GET /api/chirps", api.HandleGETChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", api.HandleGETChirpsWithID)
+	mux.HandleFunc(
+		"DELETE /api/chirps/{chirpID}",
+		api.AuthMiddleware(api.HandleDELETEChirp),
+	)
 
 	// init server
 	server := new(http.Server)
