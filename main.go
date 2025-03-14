@@ -46,11 +46,11 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", api.HandleReset)
 	mux.HandleFunc("GET /api/healthz", healthCheck)
 	mux.HandleFunc("POST /api/users", api.HandlePOSTUsers)
-	mux.HandleFunc("PUT /api/users", api.HandlePUTUsers)
+	mux.HandleFunc("PUT /api/users", api.AuthMiddleware(api.HandlePUTUsers))
 	mux.HandleFunc("POST /api/login", api.HandleLogin)
 	mux.HandleFunc("POST /api/refresh", api.HandleRefresh)
 	mux.HandleFunc("POST /api/revoke", api.HandleRevoke)
-	mux.HandleFunc("POST /api/chirps", api.HandlePOSTChirp)
+	mux.HandleFunc("POST /api/chirps", api.AuthMiddleware(api.HandlePOSTChirp))
 	mux.HandleFunc("GET /api/chirps", api.HandleGETChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", api.HandleGETChirpsWithID)
 

@@ -7,7 +7,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/GianniBuoni/chirpy/internal/auth"
 	"github.com/GianniBuoni/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -25,22 +24,13 @@ func (cfg *ApiConfig) HandleGETChirps(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, res)
 }
 
-func (cfg *ApiConfig) HandlePOSTChirp(w http.ResponseWriter, r *http.Request) {
-	// parses logged in
-	token, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		respondWithInfoError(w, r.Pattern, http.StatusUnauthorized, "not logged in")
-		return
-	}
-	id, err := auth.ValidateJWT(token, cfg.SignSecret)
-	if err != nil {
-		respondWithInfoError(w, r.Pattern, http.StatusUnauthorized)
-		return
-	}
-	// chirp
+func (cfg *ApiConfig) HandlePOSTChirp(
+	w http.ResponseWriter, r *http.Request, id uuid.UUID,
+) {
+	// parse chirp
 	decoder := json.NewDecoder(r.Body)
 	chipParams := database.CreateChirpParams{}
-	err = decoder.Decode(&chipParams)
+	err := decoder.Decode(&chipParams)
 	if err != nil {
 		respondWithUnexpeted(w, r.Pattern, "decoder.Decode", err)
 		return

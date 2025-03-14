@@ -7,27 +7,19 @@ import (
 
 	"github.com/GianniBuoni/chirpy/internal/auth"
 	"github.com/GianniBuoni/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
-func (cfg *ApiConfig) HandlePUTUsers(w http.ResponseWriter, r *http.Request) {
-	// user validation
-	token, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		respondWithInfoError(w, r.Pattern, http.StatusUnauthorized, "not logged in")
-		return
-	}
-	id, err := auth.ValidateJWT(token, cfg.SignSecret)
-	if err != nil {
-		respondWithInfoError(w, r.Pattern, http.StatusUnauthorized)
-		return
-	}
+func (cfg *ApiConfig) HandlePUTUsers(
+	w http.ResponseWriter, r *http.Request, id uuid.UUID,
+) {
 	// parse params
 	decoder := json.NewDecoder(r.Body)
 	params := database.UpdateUserParams{
 		ID:        id,
 		UpdatedAt: time.Now(),
 	}
-	err = decoder.Decode(&params)
+	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithUnexpeted(w, r.Pattern, "decoder.Decode", err)
 		return
