@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -35,6 +36,7 @@ func main() {
 	// config api
 	api.Platform = os.Getenv("PLATFORM")
 	api.SignSecret = os.Getenv("SIGN_SECRET")
+	api.PolkaKey = os.Getenv("POLKA_KEY")
 	api.Queries = database.New(conn)
 
 	// handlers

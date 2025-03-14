@@ -34,3 +34,13 @@ func GetBearerToken(headers http.Header) (string, error) {
 	bearer = strings.Trim(bearer, " ")
 	return bearer, nil
 }
+
+func GetAPIKey(headers http.Header) (string, error) {
+	header := headers.Get("Authorization")
+	if header == "" {
+		return "", errors.New("No Authorization header set")
+	}
+	key := strings.Replace(header, "ApiKey", "", 1)
+	key = strings.Trim(key, " ")
+	return key, nil
+}

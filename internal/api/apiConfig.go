@@ -14,6 +14,7 @@ import (
 type ApiConfig struct {
 	Platform       string
 	SignSecret     string
+	PolkaKey       string
 	Queries        *database.Queries
 	FileserverHits atomic.Int32
 }
