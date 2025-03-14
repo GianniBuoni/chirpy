@@ -57,6 +57,7 @@ func main() {
 		"DELETE /api/chirps/{chirpID}",
 		api.AuthMiddleware(api.HandleDELETEChirp),
 	)
+	mux.HandleFunc("POST /api/polka/webhooks", api.HandlePolkaWebhook)
 
 	// init server
 	server := new(http.Server)

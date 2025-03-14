@@ -23,6 +23,7 @@ type loginResponse struct {
 	Email        string    `json:"email"`
 	Token        string    `json:"token"`
 	RefreshToken string    `json:"refresh_token"`
+	IsChirpyRed  bool      `json:"is_chirpy_red"`
 }
 
 func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -56,10 +57,11 @@ func (cfg *ApiConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// init response
 	data := loginResponse{
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Id:        user.ID,
-		Email:     user.Email,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
+		Id:          user.ID,
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed,
 	}
 	data.Token, err = auth.MakeJWT(user.ID, cfg.SignSecret, JWTDuration)
 	if err != nil {
