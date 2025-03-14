@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a *ApiConfig) HandeUsers(w http.ResponseWriter, r *http.Request) {
+func (a *ApiConfig) HandlePOSTUsers(w http.ResponseWriter, r *http.Request) {
 	// decode req
 	decoder := json.NewDecoder(r.Body)
 	user := database.CreateUserParams{}

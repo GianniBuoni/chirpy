@@ -15,5 +15,11 @@ WHERE email = $1;
 SELECT id, created_at, updated_at, email FROM users
 WHERE id = $1;
 
+-- name: UpdateUser :one
+UPDATE users
+  SET updated_at = $2, email = $3, hashed_password = $4
+  WHERE id = $1
+  RETURNING id, created_at, updated_at, email;
+
 -- name: DeleteUsers :exec
 DELETE FROM users;

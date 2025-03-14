@@ -59,7 +59,7 @@ func respondWithInfoError(
 ) {
 	msg := errorMesages[code]
 	if len(extra) > 0 {
-		msg += msg + ": " + strings.Join(extra, " ")
+		msg = msg + ": " + strings.Join(extra, " ")
 	}
 	logInfo(pattern, fmt.Sprintf("%d %s", code, msg))
 	respondWithError(w, code, msg)
