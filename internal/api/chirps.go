@@ -12,9 +12,25 @@ import (
 )
 
 func (cfg *ApiConfig) HandleGETChirps(w http.ResponseWriter, r *http.Request) {
-	data, err := cfg.Queries.GetChirps(r.Context())
+	var (
+		data []database.Chirp
+		err  error
+	)
+
+	// check for query params
+	s := r.URL.Query().Get("author_id")
+	if s != "" {
+		id, err := uuid.Parse(s)
+		if err != nil {
+			respondWithUnexpeted(w, r.Pattern, "uuid.Parse", err)
+			return
+		}
+		data, err = cfg.Queries.GetUserChirps(r.Context(), id)
+	} else {
+		data, err = cfg.Queries.GetChirps(r.Context())
+	}
 	if err != nil {
-		respondWithUnexpeted(w, r.Pattern, "GetChirps", err)
+		respondWithInfoError(w, r.Pattern, http.StatusNotFound)
 		return
 	}
 	res, err := json.Marshal(data)
