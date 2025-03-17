@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"regexp"
+	"sort"
 	"time"
 	"unicode/utf8"
 
@@ -19,6 +20,7 @@ func (cfg *ApiConfig) HandleGETChirps(w http.ResponseWriter, r *http.Request) {
 
 	// check for query params
 	s := r.URL.Query().Get("author_id")
+	t := r.URL.Query().Get("sort")
 	if s != "" {
 		id, err := uuid.Parse(s)
 		if err != nil {
@@ -32,6 +34,11 @@ func (cfg *ApiConfig) HandleGETChirps(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		respondWithInfoError(w, r.Pattern, http.StatusNotFound)
 		return
+	}
+	if t == "desc" {
+		sort.Slice(data, func(i, j int) bool {
+			return data[i].UpdatedAt.After(data[j].UpdatedAt)
+		})
 	}
 	res, err := json.Marshal(data)
 	if err != nil {
